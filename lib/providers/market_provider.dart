@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:trackercryptocurrency/api/api.dart';
 import 'package:trackercryptocurrency/models/crypto_model.dart';
@@ -22,5 +24,16 @@ class MarketProvider with ChangeNotifier {
     marketList = temp;
     isLoading = false;
     notifyListeners();
+
+    Timer(const Duration(seconds: 4), () {
+      fetchData();
+    });
+
+
+  }
+  CryptoModel fetchCryptoById(String id) {
+    CryptoModel crypto =
+    marketList.where((element) => element.id == id).toList()[0];
+    return crypto;
   }
 }

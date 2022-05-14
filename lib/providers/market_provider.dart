@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/cupertino.dart';
 import 'package:trackercryptocurrency/api/api.dart';
+import 'package:trackercryptocurrency/db/local.dart';
 import 'package:trackercryptocurrency/models/crypto_model.dart';
 
 class MarketProvider with ChangeNotifier {
@@ -12,28 +13,44 @@ class MarketProvider with ChangeNotifier {
     fetchData();
   }
 
-  void fetchData() async {
+  Future<void> fetchData() async {
     List<dynamic> _marketList = await Api.getMarketData();
+    List<String> favouriteList = await LocalStorage.fetchFavorites();
+
     List<CryptoModel> temp = [];
 
     for (var marketList in _marketList) {
-      CryptoModel cryptoModel = CryptoModel.fromJSON(marketList);
-      temp.add(cryptoModel);
+      CryptoModel newCryptoModel = CryptoModel.fromJSON(marketList);
+
+      if (favouriteList.contains(newCryptoModel.id)) {
+        newCryptoModel.isFavorite = true;
+      }
+
+      temp.add(newCryptoModel);
     }
 
     marketList = temp;
     isLoading = false;
     notifyListeners();
-
-    Timer(const Duration(seconds: 4), () {
-      fetchData();
-    });
-
-
   }
+
   CryptoModel fetchCryptoById(String id) {
     CryptoModel crypto =
-    marketList.where((element) => element.id == id).toList()[0];
+        marketList.where((element) => element.id == id).toList()[0];
     return crypto;
+  }
+
+  void addFavourite(CryptoModel crypto) async {
+    int indexOfCrypto = marketList.indexOf(crypto);
+    marketList[indexOfCrypto].isFavorite = true;
+    await LocalStorage.addFavorite(crypto.id!);
+    notifyListeners();
+  }
+
+  void removeFavourite(CryptoModel crypto) async {
+    int indexOfCrypto = marketList.indexOf(crypto);
+    marketList[indexOfCrypto].isFavorite = true;
+    await LocalStorage.removeFavorite(crypto.id!);
+    notifyListeners();
   }
 }
